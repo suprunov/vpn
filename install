@@ -307,3 +307,6 @@ done
 USERNAME="SERGEY"
 ssh root@vpn.devcv.ru "vpnuser add $USERNAME"
 scp root@vpn.devcv.ru:/var/vpnusers/$USERNAME.ovpn /Volumes/data/vpn/$USERNAME.ovpn
+
+
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/suprunov/vpn/main/installer)"
