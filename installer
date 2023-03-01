@@ -43,7 +43,6 @@ clear
 # vpnuser
 
 
-#!/bin/bash
 for USERNAME in iphone macos windows lena-pc lena-phone efim-phone efim-pc alina-phone alina-pc mama-phone mama-pc1 mama-pc2 aa-phone salvadore-phone salvadore-pc samoilov-phone samoilov-pc
 do
     echo $USERNAME
