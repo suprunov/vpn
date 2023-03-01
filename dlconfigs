@@ -1,0 +1,7 @@
+#!/bin/bash
+# for USERNAME in iphone macos windows lena-pc lena-phone efim-phone efim-pc alina-phone alina-pc mama-phone mama-pc1 mama-pc2 aa-phone salvadore-phone salvadore-pc samoilov-phone samoilov-pc
+# do
+#     echo $USERNAME
+    # ssh root@vpn.devcv.ru "vpnuser add $USERNAME"
+    scp -r root@vpn.devcv.ru:/var/vpnusers .
+# done

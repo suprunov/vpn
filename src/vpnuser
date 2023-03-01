@@ -1,0 +1,26 @@
+#!/bin/bash
+if [[ $# == 2 ]]; then
+    case "$1" in
+    "add" )
+        docker run -v $VPN:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full $2 nopass
+        docker run -v $VPN:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient $2 > $FOLDER/$2.ovpn
+    ;;
+    "remove" )
+        docker run -v $VPN:/etc/openvpn --rm kylemanna/openvpn ovpn_revokeclient $2 remove
+    ;;
+    "clear" )
+        rm -rf $FOLDER/*.ovpn
+    ;;
+    * )
+        echo "vpnuser [command] [username]"
+        echo "vpnuser add username - создаст пользователя username и сформирует файл конфигурации username.ovpn в папке $FOLDER"
+        echo "vpnuser remove username - удалит пользователя username"
+        echo "vpnuser clear удалит все файлы конфигурации из папки $FOLDER"
+    ;;
+    esac
+else
+        echo "vpnuser [command] [username]"
+        echo "vpnuser add username - создаст пользователя username и сформирует файл конфигурации username.ovpn в папке $FOLDER"
+        echo "vpnuser remove username - удалит пользователя username"
+        echo "vpnuser clear удалит все файлы конфигурации из папки $FOLDER"
+fi

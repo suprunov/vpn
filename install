@@ -1,0 +1,309 @@
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full sergey-iphone nopass
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full sergey-macos nopass
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full lena-macos nopass
+
+docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient sergey-iphone > sergey-iphone.ovpn
+docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient sergey-macos > sergey-macos.ovpn
+docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient sergey-windows > sergey-windows.ovpn
+
+
+scp root@vpn.devcv.ru:/root/sergey-iphone.ovpn /Volumes/data/vpn/sergey-iphone.ovpn
+
+
+
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full lena-macos nopass
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full lena-iphone1 nopass
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full lena-iphone2 nopass
+
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full efim-iphone nopass
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full efim-pc nopass
+
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full mama-iphone nopass
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full mama-pc1 nopass
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full mama-pc2 nopass
+
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full alina-iphone nopass
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full alina-pc nopass
+
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full salvadore-iphone nopass
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full salvadore-pc nopass
+
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full samoilov-iphone nopass
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full samoilov-pc nopass
+
+
+
+
+passwd
+
+apt update && apt upgrade -y
+
+
+apt install mc nginx snapd apt-transport-https ca-certificates curl software-properties-common -y
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+apt update
+apt-cache policy docker-ce
+apt install docker-ce docker-compose -y
+#systemctl status docker
+
+git clone https://github.com/kylemanna/docker-openvpn.git
+
+
+
+VPN="vpn.devcv.ru"
+
+echo "127.0.0.1 $VPN" >> /etc/hosts
+echo $VPN > /etc/hostname
+
+
+
+docker volume create --name $VPN
+docker run -v $VPN:/etc/openvpn --rm kylemanna/openvpn ovpn_genconfig -u udp://$VPN
+docker run -v $VPN:/etc/openvpn --rm -it kylemanna/openvpn ovpn_initpki nopass
+
+
+
+
+VPN_USER="lena-macos"
+
+
+
+docker run -v $VPN:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full $VPN_USER nopass
+docker run -v $VPN:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient $VPN_USER > $VPN_USER.ovpn
+
+
+
+#!/bin/bash
+docker-compose run --rm openvpn easyrsa build-client-full $1 nopass
+docker-compose run --rm openvpn ovpn_getclient $1 > $1.ovpn
+
+
+#!/bin/bash
+docker-compose run --rm openvpn ovpn_revokeclient $1 remove
+
+
+
+
+
+snap install core; snap refresh core
+sudo snap install --classic certbot
+ln -s /snap/bin/certbot /usr/bin/certbot
+certbot --nginx
+
+
+
+
+
+
+
+
+
+
+
+cat << EOF >> ~/vpnuser
+#!/bin/bash
+FOLDER="/root/vpnusers"
+VPN="vpn.devcv.ru"
+mkdir -p $FOLDER
+case "$1" in
+"add" )
+    if [[ $# == 2 ]]; then
+        docker run -v $VPN:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full $2 nopass
+        docker run -v $VPN:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient $2 > $FOLDER/$2.ovpn
+    else
+        echo "vpnuser [command] [username]"
+        echo "vpnuser add username - создаст пользователя username и сформирует файл конфигурации username.ovpn в папке $FOLDER"
+        echo "vpnuser remove username - удалит пользователя username"
+        echo "vpnuser clear удалит все файлы конфигурации из папки $FOLDER"
+    fi
+;;
+"remove" )
+    if [[ $# == 2 ]]; then
+        docker run -v $VPN:/etc/openvpn --rm kylemanna/openvpn ovpn_revokeclient $2 remove
+    else
+        echo "vpnuser [command] [username]"
+        echo "vpnuser add username - создаст пользователя username и сформирует файл конфигурации username.ovpn в папке $FOLDER"
+        echo "vpnuser remove username - удалит пользователя username"
+        echo "vpnuser clear удалит все файлы конфигурации из папки $FOLDER"
+    fi
+;;
+"clear" )
+    rm -rf $FOLDER
+;;
+* )
+    echo "vpnuser [command] [username]"
+    echo "vpnuser add username - создаст пользователя username и сформирует файл конфигурации username.ovpn в папке $FOLDER"
+    echo "vpnuser remove username - удалит пользователя username"
+    echo "vpnuser clear удалит все файлы конфигурации из папки $FOLDER"
+;;
+esac
+EOF
+
+
+touch ~/vpnuser.sh
+chmod +x ~/vpnuser
+
+
+
+
+
+
+echo "Смена пароля ssh-пользователя root"
+passwd
+
+
+
+
+cat << EOF >> ./installer
+VPN="vpn.devcv.ru"
+FOLDER="/var/vpnusers"
+mkdir -p $FOLDER
+mkdir -p ~/docker-compose-openvpn
+mkdir -p /var/www/$VPN
+echo "127.0.0.1 $VPN" >> /etc/hosts
+echo $VPN > /etc/hostname
+apt update && apt upgrade -y
+apt install mc nginx snapd apt-transport-https ca-certificates curl software-properties-common -y
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+apt update
+apt-cache policy docker-ce
+apt install docker-ce docker-compose -y
+#systemctl status docker
+# git clone https://github.com/ssuprunov/openvpn.git 
+mkdir -p /var/www/$VPN/public
+docker volume create --name $VPN
+docker run -v $VPN:/etc/openvpn --rm kylemanna/openvpn ovpn_genconfig -u udp://$VPN
+docker run -v $VPN:/etc/openvpn --rm -it kylemanna/openvpn ovpn_initpki nopass
+
+
+EOF
+
+chmod +x ./installer
+
+./installer
+
+
+
+cat << EOF >> /var/www/$VPN/public/index.html
+
+EOF
+
+
+
+
+
+
+
+rm -rf /etc/nginx/sites-enabled/*
+rm -rf /etc/nginx/sites-available/*
+
+
+
+
+cat << EOF >> /etc/nginx/sites-available/$VPN
+server {
+    listen 80;
+    listen [::]:80;
+    root /var/www/$VPN/public;
+    index index.html;
+    server_name $VPN;
+    location / {
+        try_files $uri $uri/ =404;
+    }
+    location ~ /\.ht {
+        deny  all;
+    }
+}
+EOF
+
+ln -s /etc/nginx/sites-available/$VPN /etc/nginx/sites-enabled/$VPN
+
+nginx -t
+
+systemctl restart nginx
+
+
+snap install core; snap refresh core
+snap install --classic certbot
+ln -s /snap/bin/certbot /usr/bin/certbot
+certbot --nginx
+
+
+
+
+
+
+
+
+
+cat << EOF >> ~/docker-compose-openvpn/docker-compose.yml
+version: '2'
+services:
+  openvpn:
+    cap_add:
+     - NET_ADMIN
+    image: kylemanna/openvpn
+    container_name: openvpn
+    ports:
+     - "1194:1194/udp"
+    restart: always
+    volumes:
+     - ./openvpn-data/conf:/etc/openvpn
+EOF
+cd ~/docker-compose-openvpn
+docker-compose run --rm openvpn ovpn_genconfig -u udp://$VPN
+docker-compose run --rm openvpn ovpn_initpki
+
+cat << EOF >> /usr/bin/vpnuser
+#!/bin/bash
+if [[ \$# == 2 ]]; then
+    case "\$1" in
+    "add" )
+        docker-compose run --rm openvpn easyrsa build-client-full \$2 nopass
+        docker-compose run --rm openvpn ovpn_getclient \$2 > $FOLDER/\$2.ovpn
+    ;;
+    "remove" )
+        docker-compose run --rm openvpn ovpn_revokeclient \$2 remove
+    ;;
+    "clear" )
+        rm -rf $FOLDER/*.ovpn
+    ;;
+    * )
+        echo "vpnuser [command] [username]"
+        echo "vpnuser add username - создаст пользователя username и сформирует файл конфигурации username.ovpn в папке $FOLDER"
+        echo "vpnuser remove username - удалит пользователя username"
+        echo "vpnuser clear удалит все файлы конфигурации из папки $FOLDER"
+    ;;
+    esac
+else
+        echo "vpnuser [command] [username]"
+        echo "vpnuser add username - создаст пользователя username и сформирует файл конфигурации username.ovpn в папке $FOLDER"
+        echo "vpnuser remove username - удалит пользователя username"
+        echo "vpnuser clear удалит все файлы конфигурации из папки $FOLDER"
+fi
+EOF
+
+
+chmod +x /usr/bin/vpnuser
+
+docker-compose up -d
+
+
+
+
+
+
+#!/bin/bash
+for USERNAME in iphone macos windows lena-pc lena-phone efim-phone efim-pc alina-phone alina-pc mama-phone mama-pc1 mama-pc2 aa-phone salvadore-phone salvadore-pc samoilov-phone samoilov-pc
+do
+    echo $USERNAME
+    ssh root@vpn.devcv.ru "vpnuser add $USERNAME"
+    scp root@vpn.devcv.ru:/var/vpnusers/$USERNAME.ovpn ./$USERNAME.ovpn
+done
+
+
+USERNAME="SERGEY"
+ssh root@vpn.devcv.ru "vpnuser add $USERNAME"
+scp root@vpn.devcv.ru:/var/vpnusers/$USERNAME.ovpn /Volumes/data/vpn/$USERNAME.ovpn

@@ -1,0 +1,57 @@
+#!/bin/bash
+passwd
+
+export VPN="vpn.devcv.ru"
+export FOLDER="/var/vpnusers"
+echo "export VPN=\"vpn.devcv.ru\"" >> ~/.bashrc
+echo "export FOLDER=\"/var/vpnusers\"" >> ~/.bashrc
+source ~/.bashrc
+VPN="vpn.devcv.ru"
+FOLDER="/var/vpnusers"
+
+
+mkdir -p $FOLDER
+echo "127.0.0.1 $VPN" >> /etc/hosts
+echo $VPN > /etc/hostname
+apt update && apt upgrade -y
+apt install mc nginx snapd apt-transport-https ca-certificates curl software-properties-common -y
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+apt update
+apt-cache policy docker-ce
+apt install docker-ce -y
+
+docker volume create --name $VPN
+docker run -v $VPN:/etc/openvpn --rm kylemanna/openvpn ovpn_genconfig -u udp://$VPN
+docker run -v $VPN:/etc/openvpn --rm -it kylemanna/openvpn ovpn_initpki nopass
+
+git clone https://github.com/suprunov/vpn.git
+mv ~/vpn/src/vpnuser /usr/bin/vpnuser 
+chmod +x /usr/bin/vpnuser
+
+mv ~/vpn/src/public/* /var/www/$VPN
+mv ~/vpn/src/nginx.conf /etc/nginx/sites-available/default
+nginx -t
+systemctl restart nginx
+
+snap install core; snap refresh core
+snap install --classic certbot
+ln -s /snap/bin/certbot /usr/bin/certbot
+certbot --nginx
+
+clear
+# vpnuser
+
+
+#!/bin/bash
+for USERNAME in iphone macos windows lena-pc lena-phone efim-phone efim-pc alina-phone alina-pc mama-phone mama-pc1 mama-pc2 aa-phone salvadore-phone salvadore-pc samoilov-phone samoilov-pc
+do
+    echo $USERNAME
+    # vpnuser add $USERNAME
+done
+
+
+echo "scp -r root@vpn.devcv.ru:/var/vpnusers ."
+
+
+
