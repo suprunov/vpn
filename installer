@@ -29,7 +29,9 @@ git clone https://github.com/suprunov/vpn.git
 mv ~/vpn/src/vpnuser /usr/bin/vpnuser 
 chmod +x /usr/bin/vpnuser
 
-mv ~/vpn/src/public/* /var/www/$VPN
+mkdir -p /var/www/$VPN
+mv ~/vpn/src/public/* /var/www/$VPN/
+
 mv ~/vpn/src/nginx.conf /etc/nginx/sites-available/default
 nginx -t
 systemctl restart nginx

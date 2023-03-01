@@ -130,7 +130,13 @@
                     <div class="input-group mb-3 copy-clipboard">
                         <input type="text" class="form-control" id="installer-command" readonly
                                value='/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/suprunov/vpn/main/installer)"'>
-                        <button title="Скопировать" class="btn btn-outline-secondary" type="button" id="button-addon2">Скопировать
+                        <button title="Скопировать" class="btn btn-outline-secondary" type="button">Скопировать
+                        </button>
+                    </div>
+                    <div class="input-group mb-3 copy-clipboard">
+                        <input type="text" class="form-control" id="download-command" readonly
+                               value='scp -r root@vpn.devcv.ru:/var/vpnusers .'>
+                        <button title="Скопировать" class="btn btn-outline-secondary" type="button">Скопировать
                         </button>
                     </div>
                 </div>
